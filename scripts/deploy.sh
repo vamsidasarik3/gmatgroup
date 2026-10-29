@@ -286,7 +286,7 @@ fi
 CURRENT_STEP="Validate Remote Configuration"
 log_step "Validating remote production server configuration"
 
-SSH_OPTS=(-p "${DEPLOY_PORT}" -o "BatchMode=yes" -o "StrictHostKeyChecking=accept-new" -o "ConnectTimeout=10")
+SSH_OPTS=(-n -p "${DEPLOY_PORT}" -o "BatchMode=yes" -o "StrictHostKeyChecking=accept-new" -o "ConnectTimeout=10")
 SCP_OPTS=(-P "${DEPLOY_PORT}" -o "BatchMode=yes" -o "StrictHostKeyChecking=accept-new" -o "ConnectTimeout=10")
 
 if [ -n "${DEPLOY_SSH_KEY}" ] && [ -f "${DEPLOY_SSH_KEY}" ]; then
@@ -335,14 +335,14 @@ if [ "$SKIP_DB" = false ] && [ -n "${BUNDLE_FILE}" ]; then
     REMOTE_INCOMING_DIR="${DEPLOY_REMOTE_PATH}/storage/app/deployments/incoming"
     REMOTE_BUNDLE_PATH="${REMOTE_INCOMING_DIR}/${BUNDLE_BASENAME}"
 
-    # Ensure remote directory exists
-    ssh "${SSH_OPTS[@]}" "${SSH_TARGET}" "mkdir -p '${REMOTE_INCOMING_DIR}'"
+    # Ensure remote directory exists and is owned by DEPLOY_EXEC_USER
+    ssh "${SSH_OPTS[@]}" "${SSH_TARGET}" "mkdir -p '${REMOTE_INCOMING_DIR}' '${DEPLOY_REMOTE_PATH}/storage' '${DEPLOY_REMOTE_PATH}/bootstrap/cache' && chown -R '${DEPLOY_EXEC_USER}:${DEPLOY_EXEC_USER}' '${DEPLOY_REMOTE_PATH}'"
 
     log_info "Uploading ${BUNDLE_BASENAME} via SCP..."
     scp "${SCP_OPTS[@]}" "${BUNDLE_FILE}" "${SSH_TARGET}:${REMOTE_BUNDLE_PATH}"
 
     if [ -n "${DEPLOY_EXEC_USER}" ] && [ "${DEPLOY_EXEC_USER}" != "${DEPLOY_USER}" ]; then
-        ssh "${SSH_OPTS[@]}" "${SSH_TARGET}" "chown -R '${DEPLOY_EXEC_USER}:${DEPLOY_EXEC_USER}' '${REMOTE_INCOMING_DIR}'"
+        ssh "${SSH_OPTS[@]}" "${SSH_TARGET}" "chown -R '${DEPLOY_EXEC_USER}:${DEPLOY_EXEC_USER}' '${DEPLOY_REMOTE_PATH}'"
     fi
     log_success "Database bundle transferred successfully to ${REMOTE_BUNDLE_PATH}"
 fi
@@ -372,13 +372,11 @@ DEPLOY_REMOTE_DB_PASS="${11}"
 mkdir -p "${DEPLOY_REMOTE_PATH}"
 cd "${DEPLOY_REMOTE_PATH}"
 
-# Initialize git if not present or clone
+# Initialize git if not present or checkout
 if [ ! -d ".git" ]; then
     echo "Initializing Git repository in ${DEPLOY_REMOTE_PATH}..."
     git init
     git remote add origin https://github.com/vamsidasarik3/gmatgroup.git
-    git fetch origin "${DEPLOY_BRANCH}"
-    git checkout -f -b "${DEPLOY_BRANCH}" "origin/${DEPLOY_BRANCH}"
 fi
 
 # Clean transient changes in storage/bootstrap
@@ -405,8 +403,7 @@ fi
 if [ "${SKIP_CODE}" = "false" ]; then
     echo "Updating code from GitHub branch '${DEPLOY_BRANCH}'..."
     git fetch origin "${DEPLOY_BRANCH}"
-    git checkout "${DEPLOY_BRANCH}"
-    git pull origin "${DEPLOY_BRANCH}"
+    git checkout -f -B "${DEPLOY_BRANCH}" "origin/${DEPLOY_BRANCH}"
 
     echo "Installing production PHP dependencies..."
     "${DEPLOY_REMOTE_COMPOSER}" install --no-dev --prefer-dist --optimize-autoloader --no-interaction
@@ -503,7 +500,8 @@ REMOTE_EOF
 log_info "Executing remote deployment pipeline on server..."
 REMOTE_WRAPPER="/tmp/gmatgroup_deploy_$$.sh"
 
-ssh "${SSH_OPTS[@]}" "${SSH_TARGET}" "cat << 'EOF' > '${REMOTE_WRAPPER}'
+ssh "${SSH_OPTS[@]}" "${SSH_TARGET}" "chown -R '${DEPLOY_EXEC_USER}:${DEPLOY_EXEC_USER}' '${DEPLOY_REMOTE_PATH}'
+cat << 'EOF' > '${REMOTE_WRAPPER}'
 ${REMOTE_SCRIPT}
 EOF
 chmod 755 '${REMOTE_WRAPPER}'

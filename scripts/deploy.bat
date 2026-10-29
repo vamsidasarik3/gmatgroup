@@ -13,3 +13,4 @@ if not exist "%BASH_EXE%" (
 
 "%BASH_EXE%" "%~dp0deploy.sh" %*
 exit /b %ERRORLEVEL%
+

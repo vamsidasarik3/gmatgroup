@@ -35,20 +35,23 @@ class HomeController extends Controller
 
         $articles = $articlesQuery->paginate(12)->withQueryString();
 
+        // Latest articles and news updates for the dedicated homepage showcase
+        $latestArticles = Article::published()
+            ->with(['topic', 'contentType'])
+            ->latest('published_at')
+            ->take(4)
+            ->get();
+
         // Featured highlighted guides
         $featuredArticles = Article::published()
             ->with(['topic', 'contentType'])
             ->featured()
             ->latest('published_at')
-            ->take(4)
+            ->take(6)
             ->get();
 
         if ($featuredArticles->isEmpty()) {
-            $featuredArticles = Article::published()
-                ->with(['topic', 'contentType'])
-                ->latest('published_at')
-                ->take(4)
-                ->get();
+            $featuredArticles = $latestArticles;
         }
 
         // Stats
@@ -64,6 +67,7 @@ class HomeController extends Controller
             'contentTypes',
             'articles',
             'featuredArticles',
+            'latestArticles',
             'stats',
             'search'
         ));

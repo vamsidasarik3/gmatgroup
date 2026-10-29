@@ -16,7 +16,7 @@
                     Master the <span class="text-primary">GMAT Focus Edition</span> with Precision
                 </h1>
                 <p class="lead text-muted mb-4 fs-6">
-                    A comprehensive, open curriculum built for ambitious candidates targeting 685–735+. Dive into <strong>414 expert walkthroughs</strong>, high-yield cheat sheets, daily diagnostic questions, and community study groups.
+                    A comprehensive, open curriculum built for ambitious candidates targeting 685–735+. Dive into <strong>{{ $stats['total_articles'] }} expert walkthroughs</strong>, high-yield cheat sheets, daily diagnostic questions, and community study groups.
                 </p>
 
                 <!-- Search Bar -->
@@ -84,6 +84,56 @@
                     </a>
                 </div>
             </div>
+        </div>
+    </div>
+</section>
+
+<!-- Latest GMAT Focus Updates & Articles -->
+<section class="py-4 bg-light border-bottom">
+    <div class="container-fluid px-lg-5">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-danger text-white text-uppercase px-2 py-1 rounded-pill small fw-bold">
+                    <i class="fa-solid fa-bolt me-1"></i> Latest Updates & Posts
+                </span>
+                <span class="text-muted small fw-semibold d-none d-sm-inline">Freshly updated GMAT Focus strategies, news & guides</span>
+            </div>
+            <a href="{{ route('articles.index') }}" class="text-decoration-none small fw-bold text-primary">
+                View All {{ $stats['total_articles'] }} Articles <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        <div class="row g-3">
+            @foreach ($latestArticles as $latest)
+                <div class="col-md-6 col-xl-3">
+                    <div class="card h-100 border-0 shadow-sm rounded-3 p-3 bg-white d-flex flex-column" style="transition: transform 0.15s ease, box-shadow 0.15s ease;">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.72rem;">
+                                {{ $latest->contentType->name ?? 'Article' }}
+                            </span>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.7rem;">
+                                <i class="fa-regular fa-clock me-1"></i> {{ $latest->published_at ? $latest->published_at->diffForHumans() : 'Recent' }}
+                            </span>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-2" style="font-size: 0.92rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 2.8rem;">
+                            <a href="{{ route('articles.show', $latest->slug) }}" class="text-decoration-none text-dark">
+                                {{ $latest->title }}
+                            </a>
+                        </h6>
+                        <p class="text-muted small mb-3 flex-grow-1" style="font-size: 0.78rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                            {{ Str::limit($latest->summary ?? strip_tags($latest->content), 95) }}
+                        </p>
+                        <div class="pt-2 border-top d-flex align-items-center justify-content-between text-muted" style="font-size: 0.72rem;">
+                            <span class="text-truncate" style="max-width: 140px;">
+                                <i class="bi bi-tag me-1 text-primary"></i> {{ $latest->topic->name ?? 'GMAT Focus' }}
+                            </span>
+                            <a href="{{ route('articles.show', $latest->slug) }}" class="text-decoration-none fw-semibold text-primary">
+                                Read Guide <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
         </div>
     </div>
 </section>
@@ -174,13 +224,13 @@
                 <p class="text-muted small mb-0">High-yield concepts tested repeatedly in official GMAT Focus mocks.</p>
             </div>
             <a href="{{ route('articles.index') }}" class="btn btn-sm btn-outline-primary rounded-pill">
-                View All 414 Guides <i class="bi bi-arrow-right ms-1"></i>
+                View All {{ $stats['total_articles'] }} Guides <i class="bi bi-arrow-right ms-1"></i>
             </a>
         </div>
 
         <div class="row g-4 mb-4">
             @foreach ($featuredArticles as $article)
-                <div class="col-md-6 col-lg-3">
+                <div class="col-md-6 col-lg-4">
                     <div class="card h-100 article-card p-3 d-flex flex-column">
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <span class="badge bg-primary-subtle text-primary border border-primary-subtle tag-pill">

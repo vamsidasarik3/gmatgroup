@@ -8,12 +8,23 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * Enhances the existing commission_models table with calculation settings,
-     * lifecycle status, and soft deletion capability while preserving all historical data.
+     * Ensures commission_models table exists with calculation settings,
+     * lifecycle status, and soft deletion capability.
      */
     public function up(): void
     {
-        if (Schema::hasTable('commission_models')) {
+        if (! Schema::hasTable('commission_models')) {
+            Schema::create('commission_models', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->string('model_type', 50)->default('level_override');
+                $table->string('status', 20)->default('active')->index();
+                $table->json('calculation_results')->nullable();
+                $table->json('settings')->nullable();
+                $table->timestamps();
+                $table->softDeletes();
+            });
+        } else {
             Schema::table('commission_models', function (Blueprint $table) {
                 if (! Schema::hasColumn('commission_models', 'status')) {
                     $table->string('status', 20)->default('active')->after('model_type')->index();
@@ -33,18 +44,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (Schema::hasTable('commission_models')) {
-            Schema::table('commission_models', function (Blueprint $table) {
-                if (Schema::hasColumn('commission_models', 'deleted_at')) {
-                    $table->dropSoftDeletes();
-                }
-                if (Schema::hasColumn('commission_models', 'settings')) {
-                    $table->dropColumn('settings');
-                }
-                if (Schema::hasColumn('commission_models', 'status')) {
-                    $table->dropColumn('status');
-                }
-            });
-        }
+        Schema::dropIfExists('commission_models');
     }
 };

@@ -10,10 +10,10 @@ if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php'))
 }
 
 // Register the Composer autoloader...
-if (file_exists(__DIR__.'/../vendor/autoload.php') && file_exists(__DIR__.'/../vendor/laravel/framework')) {
+if (file_exists(__DIR__.'/../vendor/autoload.php') && file_exists(__DIR__.'/../vendor/symfony/polyfill-mbstring')) {
     require __DIR__.'/../vendor/autoload.php';
-} else {
-    $loader = require 'G:/xampp/htdocs/custom/public_html/vendor/autoload.php';
+} elseif (file_exists('G:/xampp/htdocs/cricbail/public_html/vendor/autoload.php')) {
+    $loader = require 'G:/xampp/htdocs/cricbail/public_html/vendor/autoload.php';
     $loader->setPsr4('App\\', [dirname(__DIR__).'/app/']);
     $loader->setPsr4('Database\\Factories\\', [dirname(__DIR__).'/database/factories/']);
     $loader->setPsr4('Database\\Seeders\\', [dirname(__DIR__).'/database/seeders/']);
@@ -21,6 +21,8 @@ if (file_exists(__DIR__.'/../vendor/autoload.php') && file_exists(__DIR__.'/../v
     foreach (glob(dirname(__DIR__) . '/app/Models/*.php') as $modelFile) {
         require_once $modelFile;
     }
+} else {
+    require __DIR__.'/../vendor/autoload.php';
 }
 
 // Bootstrap Laravel and handle the request...
